@@ -36,9 +36,9 @@ import java.util.Random;
  */
 public class Space
 {
+	private final Random rng;
 	private final String[] values;
 	private int pos;
-	private final Random rng;
 	
 	/**
 	 * Constructs a new space with the given values.
@@ -47,9 +47,9 @@ public class Space
 	 */
 	public Space(String[] values)
 	{
+		this.rng = new Random();
 		this.values = values;
 		this.pos = 0;
-		this.rng = new Random();
 	}
 	
 	/**
@@ -111,7 +111,7 @@ public class Space
 		}
 		if (firstChar == 'M' || firstChar == '<' || firstChar == '>') {
 			// Variable movement spaces
-			int movementAmt = Integer.parseInt(currValue.substring(1));
+			int moveAmt = Integer.parseInt(currValue.substring(1));
 			StringBuilder ret = new StringBuilder();
 			if (firstChar == 'M') {
 				ret.append("Move ");
@@ -120,12 +120,8 @@ public class Space
 			} else {
 				ret.append("Advance ");
 			}
-			ret.append(movementAmt);
-			if (movementAmt == 1) {
-				ret.append(" Space");
-			} else {
-				ret.append(" Spaces");
-			}
+			ret.append(moveAmt);
+			ret.append(moveAmt == 1 ? " Space" : " Spaces");
 			return ret.toString();
 		}
 		// Cash spaces

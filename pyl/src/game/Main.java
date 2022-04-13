@@ -9,6 +9,8 @@ public final class Main
 {
 	public static void main(String[] args)
 	{
-		System.out.println("Hello World");
+		Board b = new Board("board1.txt");
+		b.stopBoard();
+		System.out.println(b);
 	}
 }
