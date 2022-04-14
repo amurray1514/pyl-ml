@@ -14,7 +14,7 @@ import java.util.Random;
 public class Board
 {
 	private final Random rng;
-	private final ArrayList<Space> spaces;
+	private final List<Space> spaces;
 	private boolean doubleInPlay;
 	private int prizeMin, prizeMax;
 	private int lightPos;
