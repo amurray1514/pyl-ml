@@ -1,6 +1,8 @@
 package game;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Class representing a Press Your Luck player.
@@ -67,6 +69,16 @@ public abstract class Player implements Comparable<Player>
 	}
 	
 	/**
+	 * Adds the passed-in number of spins to the player's earned spins.
+	 *
+	 * @param addedSpins The number of spins to add.
+	 */
+	public void addEarnedSpins(int addedSpins)
+	{
+		this.earnedSpins += addedSpins;
+	}
+	
+	/**
 	 * Returns this player's number of passed spins.
 	 *
 	 * @return This player's number of passed spins.
@@ -84,6 +96,16 @@ public abstract class Player implements Comparable<Player>
 	public void setPassedSpins(int passedSpins)
 	{
 		this.passedSpins = passedSpins;
+	}
+	
+	/**
+	 * Adds the passed-in number of spins to the player's passed spins.
+	 *
+	 * @param addedSpins The number of spins to add.
+	 */
+	public void addPassedSpins(int addedSpins)
+	{
+		this.passedSpins += addedSpins;
 	}
 	
 	/**
@@ -193,6 +215,162 @@ public abstract class Player implements Comparable<Player>
 	}
 	
 	/**
+	 * Returns {@code true} if this player has spins left and {@code false}
+	 * otherwise.
+	 *
+	 * @return {@code true} if this player has spins left and {@code false}
+	 * otherwise.
+	 */
+	public boolean hasSpins()
+	{
+		return this.earnedSpins > 0 || this.passedSpins > 0;
+	}
+	
+	/**
+	 * Plays a spin on the passed-in board.
+	 *
+	 * @param board The board to use the spin on.
+	 * @param printSpin Whether to print the result of the spin.
+	 */
+	public void playSpin(Board board, boolean printSpin)
+	{
+		// Deduct a spin from the player
+		if (this.passedSpins > 0) {
+			this.passedSpins--;
+		} else {
+			this.earnedSpins--;
+		}
+		// Stop the board
+		if (printSpin) {
+			InputUtil.getLine("Press Enter to stop the board...");
+		}
+		Space space = board.stopBoard();
+		if (printSpin) {
+			System.out.println(board);
+			System.out.println(this.getName() + " stopped on " + space + '.');
+		}
+		// Move the light if necessary
+		List<Space> moveTargets = board.getMoveTargets();
+		if (moveTargets.size() == 1) {
+			space = moveTargets.get(0);
+			if (printSpin) {
+				System.out.println("The light moves to " + space + '.');
+			}
+		} else if (moveTargets.size() > 1) {
+			if (printSpin) {
+				System.out.println(
+						"The light can move to one of the following spaces: " +
+								moveTargets.stream().map(Space::toString)
+										.collect(Collectors.joining(", "))
+				+ '.');
+			}
+			space = this.chooseMoveTarget(moveTargets);
+			if (printSpin) {
+				System.out.println(this.getName() + " chooses " + space + '.');
+			}
+		}
+		// Perform the effect of the space
+		String value = space.getValue();
+		char firstChar = value.charAt(0);
+		StringBuilder printStr = new StringBuilder();
+		if (firstChar == 'W') {
+			// Whammy
+			this.score = 0;
+			this.whammies += 1;
+			if (printSpin) {
+				printStr.append("A Whammy reduces ");
+				printStr.append(this.getName());
+				printStr.append("'s score to $0! ");
+				printStr.append(this.getName());
+				printStr.append(" now has ");
+				printStr.append(this.whammies);
+				printStr.append(this.whammies == 1 ? " Whammy." : " Whammies.");
+			}
+			// If 4 whammies, also remove all spins
+			if (this.whammies == 4) {
+				this.earnedSpins = 0;
+				this.passedSpins = 0;
+				if (printSpin) {
+					printStr.append("\nWith 4 Whammies, ");
+					printStr.append(this.getName());
+					printStr.append(" is out of the game!");
+				}
+			}
+			// If any passed spins, move to "earned" column
+			if (this.passedSpins > 0) {
+				this.earnedSpins += this.passedSpins;
+				this.passedSpins = 0;
+				if (printSpin) {
+					printStr.append("\nOn the bright side, all of ");
+					printStr.append(this.getName());
+					printStr.append("'s passed spins have been moved ");
+					printStr.append("to the \"earned\" column.");
+				}
+			}
+		} else if (firstChar == 'P') {
+			// Prize
+			int prizeValue = board.getPrizeValue();
+			this.score += prizeValue;
+			if (printSpin) {
+				printStr.append("The prize is worth ");
+				printStr.append(String.format("$%1$,d!", prizeValue));
+				printStr.append(" Let's add that to ");
+				printStr.append(this.getName());
+				printStr.append("'s score.");
+			}
+		} else if (firstChar == 'D') {
+			// Double Your $$ + One Spin
+			this.score *= 2;
+			this.earnedSpins++;
+			board.removeDoubleFromPlay();
+		} else if (firstChar == 'A') {
+			// Add-a-One
+			this.score += IntStream.range(0, Long.toString(this.score).length())
+					.mapToLong(i -> 10).reduce(1, (a, b) -> a * b);
+			if (printSpin) {
+				printStr.append("The digit 1 is put in front of ");
+				printStr.append(this.getName());
+				printStr.append("'s score!");
+			}
+		} else {
+			// Cash space
+			char lastChar = value.charAt(value.length() - 1);
+			int cashAmt = space.getCashAmount();
+			if (lastChar == 'S') {
+				// Cash + One Spin
+				this.score += cashAmt;
+				this.earnedSpins++;
+			} else if (lastChar == 'L') {
+				// Cash or Lose-1-Whammy
+				if (this.whammies == 0) {
+					this.score += cashAmt;
+				} else {
+					if (this.moneyOrLoseWhammy(cashAmt)) {
+						this.score += cashAmt;
+						if (printSpin) {
+							printStr.append(this.getName());
+							printStr.append(" chooses to take ");
+							printStr.append(String.format("$%1$,d.", cashAmt));
+						}
+					} else {
+						this.whammies--;
+						if (printSpin) {
+							printStr.append(this.getName());
+							printStr.append(" chooses to lose one Whammy.");
+						}
+					}
+				}
+			} else {
+				// Plain cash
+				this.score += cashAmt;
+			}
+		}
+		if (printStr.length() > 0) {
+			System.out.println(printStr);
+		}
+	}
+	
+	/**
 	 * Returns {@code true} if this player presses their luck and {@code false}
 	 * if this player passes their spins.
 	 *
@@ -228,7 +406,7 @@ public abstract class Player implements Comparable<Player>
 	 * @param targets The list of possible pass targets.
 	 * @return The player this player chooses to pass their spins to.
 	 */
-	public abstract Player choosePassTarget(Player[] targets);
+	public abstract Player choosePassTarget(List<Player> targets);
 	
 	/**
 	 * Adjusts this player's strategy based on the change in game state,

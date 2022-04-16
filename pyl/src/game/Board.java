@@ -88,23 +88,27 @@ public class Board
 	}
 	
 	/**
-	 * Returns the minimum value of a prize on this board.
-	 *
-	 * @return The minimum value of a prize on this board.
+	 * Removes "Double Your $$ + One Spin" from play by replacing it with a
+	 * prize space.
+	 * <p>
+	 * This method only works when the light is currently on "Double Your $$ +
+	 * One Spin".
 	 */
-	public int getPrizeMin()
+	public void removeDoubleFromPlay()
 	{
-		return this.prizeMin;
+		this.doubleInPlay = false;
+		this.spaces.get(this.lightPos).setCurrentValue("P");
 	}
 	
 	/**
-	 * Returns the maximum value of a prize on this board.
+	 * Returns a random prize value for this board.
 	 *
-	 * @return The maximum value of a prize on this board.
+	 * @return A random prize value for this board.
 	 */
-	public int getPrizeMax()
+	public int getPrizeValue()
 	{
-		return this.prizeMax;
+		return this.prizeMin +
+				rng.nextInt(this.prizeMax - this.prizeMin + 1);
 	}
 	
 	/**

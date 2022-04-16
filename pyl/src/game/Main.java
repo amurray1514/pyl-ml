@@ -1,5 +1,7 @@
 package game;
 
+import java.util.stream.IntStream;
+
 /**
  * Main class to run the project.
  *
@@ -9,16 +11,10 @@ public final class Main
 {
 	public static void main(String[] args)
 	{
-		Board b = new Board("board2.txt");
-		System.out.println(b.stopBoard());
-		System.out.println(b);
-		
-		Player p1 = new ManualPlayer();
-		p1.setPlayerNum(1);
-		Player p2 = new ManualPlayer();
-		p2.setPlayerNum(2);
-		Player p3 = new ManualPlayer();
-		p3.setPlayerNum(3);
-		System.out.println(p1.choosePassTarget(new Player[]{p2, p3}));
+		Player[] players = IntStream.range(0, 3)
+				.mapToObj(i -> new ManualPlayer()).toArray(ManualPlayer[]::new);
+		Board[] boards = {new Board("board1.txt"), new Board("board2.txt")};
+		Game game = new Game(players, boards);
+		System.out.println(game.play(true));
 	}
 }

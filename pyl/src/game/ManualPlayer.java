@@ -55,9 +55,9 @@ public class ManualPlayer extends Player
 	}
 	
 	@Override
-	public Player choosePassTarget(Player[] targets)
+	public Player choosePassTarget(List<Player> targets)
 	{
 		return (Player)InputUtil.getOption("Choose a player to pass to.",
-				(Object[])targets);
+				targets.toArray());
 	}
 }
