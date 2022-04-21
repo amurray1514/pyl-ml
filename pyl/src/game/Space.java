@@ -82,6 +82,26 @@ public class Space
 	}
 	
 	/**
+	 * Sets this space's current position to the passed-in index.
+	 *
+	 * @param pos The position index.
+	 */
+	public void setPos(int pos)
+	{
+		this.pos = pos;
+	}
+	
+	/**
+	 * Returns the number of possible values this space can take on.
+	 *
+	 * @return The number of possible values this space can take on.
+	 */
+	public int getNumValues()
+	{
+		return this.values.length;
+	}
+	
+	/**
 	 * Returns the full name of this space's current value.
 	 *
 	 * @return The full name of this space's current value.

@@ -15,9 +15,57 @@ public class Board
 {
 	private final Random rng;
 	private final List<Space> spaces;
-	private boolean doubleInPlay;
+	private int doublesInPlay;
 	private int prizeMin, prizeMax;
 	private int lightPos;
+	
+	// Values used to calculate expected value of a spin
+	private int numSpaces;
+	private double expCash, expSpins, expWhammies;
+	
+	/**
+	 * Player class used to make EV calculation easier.
+	 */
+	private class EVPlayer extends Player
+	{
+		@Override
+		public boolean pressOrPass()
+		{
+			return true;
+		}
+		
+		@Override
+		public Space chooseMoveTarget(List<Space> moveTargets)
+		{
+			int maxValue = -1;
+			Space maxSpace = null;
+			for (Space s: moveTargets) {
+				int amt = -1;
+				if (s.getCashAmount() > 0) {
+					amt = s.getCashAmount();
+				} else if (s.getValue().equals("P")) {
+					amt = (prizeMax + prizeMin) / 2;
+				}
+				if (amt > maxValue) {
+					maxValue = amt;
+					maxSpace = s;
+				}
+			}
+			return maxSpace;
+		}
+		
+		@Override
+		public boolean moneyOrLoseWhammy(int amount)
+		{
+			return true;
+		}
+		
+		@Override
+		public Player choosePassTarget(List<Player> targets)
+		{
+			return targets.get(0);
+		}
+	}
 	
 	/**
 	 * The probability that "Double Your $$ + One Spin" will be available, if
@@ -45,9 +93,9 @@ public class Board
 	{
 		this.rng = new Random();
 		this.spaces = new ArrayList<>();
-		this.doubleInPlay = this.rng.nextDouble() < DOUBLE_IN_PLAY_CHANCE;
+		this.doublesInPlay = 0;
+		boolean useDouble = this.rng.nextDouble() < DOUBLE_IN_PLAY_CHANCE;
 		this.lightPos = 0;
-		boolean doublePresent = false;
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(fn));
 			// Read first line (prize min/max)
@@ -59,8 +107,8 @@ public class Board
 			while ((line = in.readLine()) != null) {
 				if (line.contains("D")) {
 					// Space may have "Double Your $$ + One Spin"
-					if (this.doubleInPlay) {
-						doublePresent = true;
+					if (useDouble) {
+						this.doublesInPlay++;
 					} else {
 						line = line.replace('D', 'P');
 					}
@@ -72,7 +120,44 @@ public class Board
 					". File is missing or malformed.");
 			System.exit(1);
 		}
-		this.doubleInPlay = doublePresent;
+		// Calculate board statistics
+		this.expCash = 0;
+		this.expSpins = 0;
+		this.expWhammies = 0;
+		this.numSpaces = 0;
+		// Store previous prize min and prize max (to make prizes consistent)
+		int prevPrizeMin = this.prizeMin;
+		int prevPrizeMax = this.prizeMax;
+		this.prizeMin = (prevPrizeMax + prevPrizeMin) / 2;
+		this.prizeMax = (prevPrizeMax + prevPrizeMin) / 2;
+		// Loop through spaces and update values
+		EVPlayer player = new EVPlayer();
+		for (int i = 0; i < this.spaces.size(); i++) {
+			Space s = this.spaces.get(i);
+			for (int j = 0; j < s.getNumValues(); j++) {
+				this.numSpaces++;
+				// Have the player play 30 spins and average the results
+				for (int n = 0; n < 30; n++) {
+					player.setScore(0);
+					player.setEarnedSpins(1);
+					player.setWhammies(0);
+					this.stopBoard();
+					this.lightPos = i;
+					s.setPos(j);
+					player.playSpin(this, false, false);
+					this.expCash += player.getScore();
+					this.expSpins += player.getEarnedSpins();
+					this.expWhammies += player.getWhammies();
+				}
+			}
+		}
+		this.expCash /= 30 * this.numSpaces - this.expWhammies;
+		this.expSpins /= 30 * this.numSpaces - this.expWhammies;
+		this.expWhammies /= 30 * this.numSpaces;
+		// Restore prior values
+		this.lightPos = 0;
+		this.prizeMin = prevPrizeMin;
+		this.prizeMax = prevPrizeMax;
 	}
 	
 	/**
@@ -84,7 +169,7 @@ public class Board
 	 */
 	public boolean isDoubleInPlay()
 	{
-		return this.doubleInPlay;
+		return this.doublesInPlay > 0;
 	}
 	
 	/**
@@ -96,7 +181,7 @@ public class Board
 	 */
 	public void removeDoubleFromPlay()
 	{
-		this.doubleInPlay = false;
+		this.doublesInPlay--;
 		this.spaces.get(this.lightPos).setCurrentValue("P");
 	}
 	
@@ -112,18 +197,25 @@ public class Board
 	}
 	
 	/**
-	 * Stops the board, randomizing the value of every space and the position
-	 * of the light, and returns the lit space.
+	 * Returns the average prize value for this board.
 	 *
-	 * @return The lit space after stopping the board.
+	 * @return The average prize value for this board.
 	 */
-	public Space stopBoard()
+	public int getAveragePrizeValue()
+	{
+		return (this.prizeMax - this.prizeMin) / 2;
+	}
+	
+	/**
+	 * Stops the board, randomizing the value of every space and the position of
+	 * the light.
+	 */
+	public void stopBoard()
 	{
 		for (Space s: this.spaces) {
 			s.randomizeValue();
 		}
 		this.lightPos = this.rng.nextInt(this.spaces.size());
-		return this.spaces.get(this.lightPos);
 	}
 	
 	/**
@@ -152,8 +244,8 @@ public class Board
 			// Variable movement space
 			int moveAmt = Integer.parseInt(value.substring(1));
 			if (firstChar == 'M' || firstChar == '<') {
-				ret.add(this.spaces.get((this.lightPos - moveAmt) %
-						this.spaces.size()));
+				ret.add(this.spaces.get((this.spaces.size() + this.lightPos -
+						moveAmt) % this.spaces.size()));
 			}
 			if (firstChar == 'M' || firstChar == '>') {
 				ret.add(this.spaces.get((this.lightPos + moveAmt) %
@@ -182,6 +274,42 @@ public class Board
 			ret.add(this.spaces.get(maxCashIdx));
 		}
 		return ret;
+	}
+	
+	/**
+	 * Returns the average amount of cash earned when landing on a non-Whammy
+	 * space.
+	 *
+	 * @param score The player's current score.
+	 * @return The average amount of cash earned when landing on a non-Whammy
+	 * space.
+	 */
+	public double getExpCash(long score)
+	{
+		return this.expCash + (double)(score * this.doublesInPlay) /
+				this.numSpaces;
+	}
+	
+	/**
+	 * Returns the probability of earning an extra spin on any given spin that
+	 * does not hit a Whammy.
+	 *
+	 * @return The probability of earning an extra spin on any given spin that
+	 * does not hit a Whammy.
+	 */
+	public double getExpSpins()
+	{
+		return this.expSpins;
+	}
+	
+	/**
+	 * Returns the probability of landing on a Whammy on any given spin.
+	 *
+	 * @return The probability of landing on a Whammy on any given spin.
+	 */
+	public double getExpWhammies()
+	{
+		return this.expWhammies;
 	}
 	
 	/**

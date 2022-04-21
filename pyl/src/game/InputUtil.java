@@ -27,6 +27,7 @@ public final class InputUtil
 	public static String getLine(String prompt)
 	{
 		System.out.print(prompt);
+		IN.nextLine();  // flush the input queue
 		return IN.nextLine();
 	}
 	
@@ -39,6 +40,7 @@ public final class InputUtil
 	 */
 	public static Object getOption(String prompt, Object... opts)
 	{
+		IN.nextLine();  // flush the input queue
 		System.out.println(prompt);
 		for (int i = 0; i < opts.length; i++) {
 			System.out.println((i + 1) + ". " + opts[i]);

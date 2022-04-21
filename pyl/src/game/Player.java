@@ -231,8 +231,10 @@ public abstract class Player implements Comparable<Player>
 	 *
 	 * @param board The board to use the spin on.
 	 * @param printSpin Whether to print the result of the spin.
+	 * @param stopBoard Whether to stop the board (randomizing it in the
+	 * process).
 	 */
-	public void playSpin(Board board, boolean printSpin)
+	public void playSpin(Board board, boolean printSpin, boolean stopBoard)
 	{
 		// Deduct a spin from the player
 		if (this.passedSpins > 0) {
@@ -241,10 +243,13 @@ public abstract class Player implements Comparable<Player>
 			this.earnedSpins--;
 		}
 		// Stop the board
-		if (printSpin) {
-			InputUtil.getLine("Press Enter to stop the board...");
+		if (stopBoard) {
+			if (printSpin) {
+				InputUtil.getLine("Press Enter to stop the board...");
+			}
+			board.stopBoard();
 		}
-		Space space = board.stopBoard();
+		Space space = board.getLitSpace();
 		if (printSpin) {
 			System.out.println(board);
 			System.out.println(this.getName() + " stopped on " + space + '.');

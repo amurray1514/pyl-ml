@@ -11,8 +11,8 @@ public final class Main
 {
 	public static void main(String[] args)
 	{
-		Player[] players = IntStream.range(0, 3)
-				.mapToObj(i -> new ManualPlayer()).toArray(ManualPlayer[]::new);
+		Player[] players = IntStream.range(0, 3).mapToObj(i ->
+				new HeuristicPlayer()).toArray(HeuristicPlayer[]::new);
 		Board[] boards = {new Board("board1.txt"), new Board("board2.txt")};
 		Game game = new Game(players, boards);
 		System.out.println(game.play(true));

@@ -1,9 +1,6 @@
 package game;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -140,7 +137,7 @@ public class Game
 					if (printResults) {
 						System.out.println(this);
 					}
-					this.currentTurn.playSpin(board, printResults);
+					this.currentTurn.playSpin(board, printResults, true);
 					if (!printResults) {
 						for (Player p: this.players) {
 							p.learn();
@@ -158,7 +155,7 @@ public class Game
 							System.out.println(this.currentTurn.getName() +
 									" presses their luck!");
 						}
-						this.currentTurn.playSpin(board, printResults);
+						this.currentTurn.playSpin(board, printResults, true);
 						if (!printResults) {
 							for (Player p: this.players) {
 								p.learn();
@@ -261,6 +258,51 @@ public class Game
 			}
 		}
 		return winners;
+	}
+	
+	/**
+	 * Returns an array of all players in this game.
+	 *
+	 * @return An array of all players in this game.
+	 */
+	public Player[] getPlayers()
+	{
+		return this.players;
+	}
+	
+	/**
+	 * Returns the board currently in use.
+	 *
+	 * @return The board currently in use.
+	 */
+	public Board getCurrentBoard()
+	{
+		return this.boards[this.round - 1];
+	}
+	
+	/**
+	 * Returns {@code true} if it is the final round and {@code false}
+	 * otherwise.
+	 *
+	 * @return {@code true} if it is the final round and {@code false}
+	 * otherwise.
+	 */
+	public boolean isFinalRound()
+	{
+		return this.round == this.boards.length;
+	}
+	
+	/**
+	 * Returns {@code true} if there is only one spin left in the game and
+	 * {@code false} otherwise.
+	 *
+	 * @return {@code true} if there is only one spin left in the game and
+	 * {@code false} otherwise.
+	 */
+	public boolean isFinalSpin()
+	{
+		return this.isFinalRound() && Arrays.stream(this.players).mapToInt(
+				p -> p.getEarnedSpins() + p.getPassedSpins()).sum() == 1;
 	}
 	
 	/**
