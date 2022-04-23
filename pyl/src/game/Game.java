@@ -306,6 +306,64 @@ public class Game
 	}
 	
 	/**
+	 * Returns an array of values representing the game state to send as input
+	 * to a neural network.
+	 *
+	 * @param playerNum The player number requesting the game state.
+	 * @return An array of values representing the game state.
+	 */
+	public double[] getNeuralNetInput(int playerNum)
+	{
+		double[] ret = new double[33];
+		// Global values (constant, round, double in play)
+		ret[0] = 1;
+		ret[1] = this.round - 1;
+		ret[2] = this.getCurrentBoard().isDoubleInPlay() ? 1 : 0;
+		// Player-specific values
+		int oppNum = 0;
+		long maxOppScore = 0;
+		for (Player p: this.players) {
+			int offset = 4;
+			if (p.getPlayerNum() != playerNum) {
+				oppNum++;
+				offset += 10 * oppNum - 1;
+				if (p.getScore() > maxOppScore) {
+					maxOppScore = p.getScore();
+				}
+			}
+			// Current and next turn
+			if (p.equals(this.currentTurn)) {
+				ret[offset] = 1;
+				if (p.getPassedSpins() > 0) {
+					ret[3] = 1;
+				}
+			} else if (p.equals(this.nextTurn)) {
+				ret[offset + 1] = 1;
+			}
+			// Whammy count
+			int wc = p.getWhammies();
+			for (int i = 0; i < wc; i++) {
+				ret[offset + 2 + i] = 1;
+			}
+			// Score, earned spin count, and passed spin count
+			ret[offset + 6] = p.getScore();
+			ret[offset + 7] = p.getEarnedSpins();
+			ret[offset + 8] = p.getPassedSpins();
+		}
+		// Each opponent's pass target eligibility
+		oppNum = 0;
+		for (Player p: this.players) {
+			if (p.getPlayerNum() != playerNum) {
+				oppNum++;
+				if (p.getScore() == maxOppScore) {
+					ret[12 + 10 * oppNum] = 1;
+				}
+			}
+		}
+		return ret;
+	}
+	
+	/**
 	 * Returns a {@code String} representation of this game.
 	 *
 	 * @return a {@code String} representation of this game.

@@ -327,7 +327,9 @@ public abstract class Player implements Comparable<Player>
 			// Double Your $$ + One Spin
 			this.score *= 2;
 			this.earnedSpins++;
-			board.removeDoubleFromPlay();
+			if (stopBoard) {
+				board.removeDoubleFromPlay();
+			}
 		} else if (firstChar == 'A') {
 			// Add-a-One
 			this.score += IntStream.range(0, Long.toString(this.score).length())

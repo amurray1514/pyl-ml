@@ -3,13 +3,25 @@ package game;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * Class representing a "heuristic player", one that follows a set of heuristic
  * strategies inspired by "PYL Strategy" (Cheung).
+ *
+ * @author Archer Murray
  */
 public class HeuristicPlayer extends Player
 {
+	private final double[] totalStateValues;
+	private long statesMeasured;
+	
+	public HeuristicPlayer()
+	{
+		this.totalStateValues = new double[33];
+		this.statesMeasured = 0;
+	}
+	
 	@Override
 	public boolean pressOrPass()
 	{
@@ -60,10 +72,8 @@ public class HeuristicPlayer extends Player
 		// Calculate expected amount to recoup if next spin hits a whammy
 		double recoupAmt = (this.getEarnedSpins() - 1) * expCash /
 				(1 - expSpins);
-		System.out.println("Recoup amount is $" + recoupAmt);
 		// Calculate point at which spinning again has a negative EV
 		double negExpAmt = expCash * (1 - expWhammies) / expWhammies;
-		System.out.println("Negative exp. amount is $" + negExpAmt);
 		// Press if current score is below higher of the above values
 		return this.getScore() < Math.max(recoupAmt, negExpAmt);
 	}
@@ -73,9 +83,10 @@ public class HeuristicPlayer extends Player
 	{
 		// Strategy: Take a spin if available and not final spin; otherwise take
 		// largest cash amount without a spin
-		boolean extraSpinAvailable = false;
 		int maxValue = -1;
 		Space maxSpace = null;
+		int maxSpinValue = -1;
+		Space maxSpinSpace = null;
 		for (Space s: moveTargets) {
 			int amt = -1;
 			if (s.getCashAmount() > 0) {
@@ -83,25 +94,27 @@ public class HeuristicPlayer extends Player
 			} else if (s.getValue().equals("P")) {
 				amt = this.getGame().getCurrentBoard().getAveragePrizeValue();
 			}
-			if (s.getValue().charAt(s.getValue().length() - 1) == 'S') {
-				if (this.getGame().isFinalSpin()) {
-					continue;
-				}
-				if (!extraSpinAvailable) {
-					extraSpinAvailable = true;
-					maxValue = -1;
+			boolean hasSpin = s.getValue().charAt(s.getValue().length() - 1) ==
+					'S';
+			if (hasSpin) {
+				if (amt > maxSpinValue) {
+					maxSpinValue = amt;
+					maxSpinSpace = s;
 				}
 			} else {
-				if (extraSpinAvailable && !this.getGame().isFinalSpin()) {
-					continue;
+				if (amt > maxValue) {
+					maxValue = amt;
+					maxSpace = s;
 				}
 			}
-			if (amt > maxValue) {
-				maxValue = amt;
-				maxSpace = s;
-			}
 		}
-		return maxSpace;
+		if (maxSpace == null) {
+			return maxSpinSpace;
+		}
+		if (maxSpinSpace == null || this.getGame().isFinalSpin()) {
+			return maxSpace;
+		}
+		return maxSpinSpace;
 	}
 	
 	@Override
@@ -116,5 +129,29 @@ public class HeuristicPlayer extends Player
 		// Strategy: Pass to the player with the most whammies
 		return targets.stream()
 				.max(Comparator.comparingInt(Player::getWhammies)).orElse(null);
+	}
+	
+	/**
+	 * Measures the current game state and stores the values.
+	 */
+	@Override
+	public void learn()
+	{
+		double[] state = this.getGame().getNeuralNetInput(this.getPlayerNum());
+		for (int i = 0; i < 33; i++) {
+			this.totalStateValues[i] += state[i];
+		}
+		this.statesMeasured++;
+	}
+	
+	/**
+	 * Returns the average of all game states this player has measured.
+	 *
+	 * @return The average of all game states this player has measured.
+	 */
+	public double[] getAverageState()
+	{
+		return IntStream.range(0, 33).mapToDouble(
+				i -> this.totalStateValues[i] / this.statesMeasured).toArray();
 	}
 }
