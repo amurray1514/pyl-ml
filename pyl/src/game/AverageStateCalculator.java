@@ -10,7 +10,7 @@ import java.util.Arrays;
  */
 public class AverageStateCalculator
 {
-	private final HeuristicPlayer[] players;
+	private final StateRecordingPlayer[] players;
 	private final String[] boardFilenames;
 	
 	/**
@@ -21,9 +21,9 @@ public class AverageStateCalculator
 	 */
 	public AverageStateCalculator(String[] fns)
 	{
-		this.players = new HeuristicPlayer[3];
+		this.players = new StateRecordingPlayer[3];
 		for (int i = 0; i < 3; i++) {
-			this.players[i] = new HeuristicPlayer();
+			this.players[i] = new StateRecordingPlayer();
 		}
 		this.boardFilenames = fns;
 	}
@@ -46,7 +46,7 @@ public class AverageStateCalculator
 		System.out.println("\r");
 		double[] ret = new double[33];
 		for (int i = 0; i < 33; i++) {
-			for (HeuristicPlayer p: this.players) {
+			for (StateRecordingPlayer p: this.players) {
 				ret[i] += p.getAverageState()[i];
 			}
 			ret[i] /= 3;

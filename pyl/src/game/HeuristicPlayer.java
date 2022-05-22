@@ -3,7 +3,6 @@ package game;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.IntStream;
 
 /**
  * Class representing a "heuristic player", one that follows a set of heuristic
@@ -13,15 +12,6 @@ import java.util.stream.IntStream;
  */
 public class HeuristicPlayer extends Player
 {
-	private final double[] totalStateValues;
-	private long statesMeasured;
-	
-	public HeuristicPlayer()
-	{
-		this.totalStateValues = new double[33];
-		this.statesMeasured = 0;
-	}
-	
 	@Override
 	public boolean pressOrPass()
 	{
@@ -129,29 +119,5 @@ public class HeuristicPlayer extends Player
 		// Strategy: Pass to the player with the most whammies
 		return targets.stream()
 				.max(Comparator.comparingInt(Player::getWhammies)).orElse(null);
-	}
-	
-	/**
-	 * Measures the current game state and stores the values.
-	 */
-	@Override
-	public void learn()
-	{
-		double[] state = this.getGame().getNeuralNetInput(this.getPlayerNum());
-		for (int i = 0; i < 33; i++) {
-			this.totalStateValues[i] += state[i];
-		}
-		this.statesMeasured++;
-	}
-	
-	/**
-	 * Returns the average of all game states this player has measured.
-	 *
-	 * @return The average of all game states this player has measured.
-	 */
-	public double[] getAverageState()
-	{
-		return IntStream.range(0, 33).mapToDouble(
-				i -> this.totalStateValues[i] / this.statesMeasured).toArray();
 	}
 }

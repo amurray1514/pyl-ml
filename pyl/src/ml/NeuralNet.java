@@ -141,6 +141,37 @@ public class NeuralNet
 	}
 	
 	/**
+	 * Adjusts the given input to be better suited to a Press Your Luck neural
+	 * network.
+	 * <p>
+	 * Specifically, this method divides each player's score by 6700, each
+	 * player's number of earned spins by 4, and each player's number of passed
+	 * spins by 0.8. Data collection from heuristic play shows that these
+	 * adjustments should give the respective nodes mean values around 0.5.
+	 *
+	 * @param input The input to adjust.
+	 * @return The adjusted input.
+	 */
+	public static double[] adjustInput(double[] input)
+	{
+		double[] ret = new double[33];
+		System.arraycopy(input, 0, ret, 0, 33);
+		// Score
+		ret[10] /= 6700;
+		ret[19] /= 6700;
+		ret[29] /= 6700;
+		// Earned spins
+		ret[11] /= 4;
+		ret[20] /= 4;
+		ret[30] /= 4;
+		// Passed spins
+		ret[12] /= 0.8;
+		ret[21] /= 0.8;
+		ret[31] /= 0.8;
+		return ret;
+	}
+	
+	/**
 	 * Evaluates the neural network on the given input values.
 	 *
 	 * @param input The input values.
@@ -152,12 +183,13 @@ public class NeuralNet
 		assert input.length == INPUT_LENGTH : "input must be length " +
 				INPUT_LENGTH;
 		int weightIdx = 0;
+		double[] adjIn = adjustInput(input);
 		// Calculate hidden layer
 		double[] hiddenLayer = new double[this.hiddenLength];
 		for (int i = 0; i < this.hiddenLength; i++) {
 			hiddenLayer[i] = 0;
 			for (int j = 0; j < INPUT_LENGTH; j++) {
-				hiddenLayer[i] += input[j] * this.weights[weightIdx];
+				hiddenLayer[i] += adjIn[j] * this.weights[weightIdx];
 				weightIdx++;
 			}
 			hiddenLayer[i] = sigmoid(hiddenLayer[i]);
@@ -184,6 +216,7 @@ public class NeuralNet
 		assert input.length == INPUT_LENGTH : "input must be length " +
 				INPUT_LENGTH;
 		// Set up variables
+		double[] adjIn = adjustInput(input);
 		double[] gradient = new double[this.weights.length];
 		double vecLen = 0.0;
 		// Evaluate at original input ("pre" values are pre-sigmoid)
@@ -192,7 +225,7 @@ public class NeuralNet
 		for (int i = 0; i < this.hiddenLength; i++) {
 			hl1pre[i] = 0;
 			for (int j = 0; j < INPUT_LENGTH; j++) {
-				hl1pre[i] += input[j] * this.weights[i * INPUT_LENGTH + j];
+				hl1pre[i] += adjIn[j] * this.weights[i * INPUT_LENGTH + j];
 			}
 			hl1[i] = sigmoid(hl1pre[i]);
 		}
@@ -213,7 +246,7 @@ public class NeuralNet
 		for (int i = 0; i < this.hiddenLength; i++) {
 			for (int j = 0; j < INPUT_LENGTH; j++) {
 				// Recalculate relevant nodes
-				hl2pre[i] += input[j] / 8192;
+				hl2pre[i] += adjIn[j] / 8192;
 				hl2[i] = sigmoid(hl2pre[i]);
 				eval2pre += (hl2[i] - hl1[i]) * this.weights[
 						this.hiddenLength * INPUT_LENGTH + i];

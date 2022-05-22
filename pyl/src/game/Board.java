@@ -207,6 +207,26 @@ public class Board
 	}
 	
 	/**
+	 * Returns the maximum prize value for this board.
+	 *
+	 * @return The maximum prize value for this board.
+	 */
+	public int getMaxPrizeValue()
+	{
+		return this.prizeMax;
+	}
+	
+	/**
+	 * Returns the minimum prize value for this board.
+	 *
+	 * @return The minimum prize value for this board.
+	 */
+	public int getMinPrizeValue()
+	{
+		return this.prizeMin;
+	}
+	
+	/**
 	 * Stops the board, randomizing the value of every space and the position of
 	 * the light.
 	 */

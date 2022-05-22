@@ -1,5 +1,10 @@
 package ml;
 
+import game.Board;
+import game.Game;
+import game.HeuristicPlayer;
+import game.Player;
+
 /**
  * Main class to run machine learning.
  *
@@ -9,21 +14,15 @@ public final class Main
 {
 	public static void main(String[] args)
 	{
-		// Find the largest input to sigma that yields an output of 0
-		double lowerBound = -750, upperBound = 0;
-		double input = (upperBound + lowerBound) / 2, prevInput = -1;
-		while (input != prevInput) {
-			double result = NeuralNet.sigmoid(input);
-			System.out.println("sigmoid(" + input + ") = " + result);
-			if (result == 0.0) {
-				lowerBound = input;
-			} else {
-				upperBound = input;
-			}
-			prevInput = input;
-			input = (upperBound + lowerBound) / 2;
-		}
-		System.out.println("Lower bound: " + lowerBound);
-		System.out.println("Upper bound: " + upperBound);
+		Board[] boards = {
+				new Board("board1.txt"),
+				new Board("board2.txt")
+		};
+		Player[] players = {
+				new HeuristicPlayer(),
+				new NeuralNetPlayer(),
+				new NeuralNetPlayer()
+		};
+		new Game(players, boards).play(true);
 	}
 }
