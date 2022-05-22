@@ -278,6 +278,21 @@ public class NeuralNet
 	}
 	
 	/**
+	 * Performs gradient descent on this neural network, with the passed-in
+	 * input and evaluation difference to bring about.
+	 *
+	 * @param prevInput The input on which to perform gradient descent.
+	 * @param diff The evaluation difference to bring about in the input.
+	 */
+	public void gradientDescent(double[] prevInput, double diff)
+	{
+		double[] grad = this.unitGradient(prevInput);
+		for (int i = 0; i < this.weights.length; i++) {
+			this.weights[i] += diff * grad[i];
+		}
+	}
+	
+	/**
 	 * Exports the weights of this neural network to the specified filename.
 	 *
 	 * @param fn The filename to export to.

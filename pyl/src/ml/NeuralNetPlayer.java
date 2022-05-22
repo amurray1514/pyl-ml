@@ -36,6 +36,16 @@ public class NeuralNetPlayer extends Player
 		this.net = nn;
 	}
 	
+	/**
+	 * Returns this player's neural network.
+	 *
+	 * @return This player's neural network.
+	 */
+	public NeuralNet getNeuralNet()
+	{
+		return net;
+	}
+	
 	@Override
 	public boolean pressOrPass()
 	{
