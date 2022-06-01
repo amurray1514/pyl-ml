@@ -1,10 +1,5 @@
 package ml;
 
-import game.Board;
-import game.Game;
-import game.HeuristicPlayer;
-import game.Player;
-
 /**
  * Main class to run machine learning.
  *
@@ -14,15 +9,13 @@ public final class Main
 {
 	public static void main(String[] args)
 	{
-		Board[] boards = {
-				new Board("board1.txt"),
-				new Board("board2.txt")
-		};
-		Player[] players = {
-				new HeuristicPlayer(),
-				new NeuralNetPlayer(),
-				new NeuralNetPlayer()
-		};
-		new Game(players, boards).play(true);
+		GeneticLearner gl = new GeneticLearner();
+		double eval = gl.evaluate(true);
+		System.out.println("Generation 0 evaluation: " + eval);
+		for (int i = 1; i <= 10; i++) {
+			gl.playGeneration(true);
+			eval = gl.evaluate(true);
+			System.out.println("Generation " + i + " evaluation: " + eval);
+		}
 	}
 }

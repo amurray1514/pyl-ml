@@ -72,12 +72,13 @@ public class NeuralNet
 		this.weights = new double[hiddenLayerSize * (INPUT_LENGTH + 1)];
 		// Initialize input-side weights
 		for (int i = 0; i < hiddenLayerSize * INPUT_LENGTH; i++) {
-			this.weights[i] = rng.nextGaussian() / Math.sqrt(INPUT_LENGTH);
+			this.weights[i] = this.rng.nextGaussian() / Math.sqrt(INPUT_LENGTH);
 		}
 		// Initialize output-side weights
 		for (int i = hiddenLayerSize * INPUT_LENGTH; i < this.weights.length;
 				i++) {
-			this.weights[i] = rng.nextGaussian() / Math.sqrt(hiddenLayerSize);
+			this.weights[i] = this.rng.nextGaussian() /
+					Math.sqrt(hiddenLayerSize);
 		}
 	}
 	
@@ -204,13 +205,12 @@ public class NeuralNet
 	}
 	
 	/**
-	 * Returns the gradient of this neural network at the given input values,
-	 * with values scaled so that the length of the gradient vector is 1.
+	 * Returns the gradient of this neural network at the given input values.
 	 *
 	 * @param input The input values.
-	 * @return The unit gradient of this neural network.
+	 * @return The gradient of this neural network.
 	 */
-	public double[] unitGradient(double[] input)
+	public double[] gradient(double[] input)
 	{
 		// Input must be the correct size
 		assert input.length == INPUT_LENGTH : "input must be length " +
@@ -218,7 +218,6 @@ public class NeuralNet
 		// Set up variables
 		double[] adjIn = adjustInput(input);
 		double[] gradient = new double[this.weights.length];
-		double vecLen = 0.0;
 		// Evaluate at original input ("pre" values are pre-sigmoid)
 		double[] hl1pre = new double[this.hiddenLength];
 		double[] hl1 = new double[this.hiddenLength];
@@ -252,7 +251,6 @@ public class NeuralNet
 						this.hiddenLength * INPUT_LENGTH + i];
 				// Estimate partial derivative
 				gradient[weightIdx] = 8192 * (sigmoid(eval2pre) - eval1);
-				vecLen += gradient[weightIdx] * gradient[weightIdx];
 				weightIdx++;
 				// Reset relevant nodes
 				hl2pre[i] = hl1pre[i];
@@ -264,15 +262,9 @@ public class NeuralNet
 			eval2pre += hl1[i] / 8192;
 			// Estimate partial derivative
 			gradient[weightIdx] = 8192 * (sigmoid(eval2pre) - eval1);
-			vecLen += gradient[weightIdx] * gradient[weightIdx];
 			weightIdx++;
 			// Reset relevant node
 			eval2pre = eval1pre;
-		}
-		// Scale gradient so that the length of the gradient vector is 1
-		vecLen = Math.sqrt(vecLen);
-		for (int i = 0; i < this.weights.length; i++) {
-			gradient[i] /= vecLen;
 		}
 		return gradient;
 	}
@@ -286,7 +278,7 @@ public class NeuralNet
 	 */
 	public void gradientDescent(double[] prevInput, double diff)
 	{
-		double[] grad = this.unitGradient(prevInput);
+		double[] grad = this.gradient(prevInput);
 		for (int i = 0; i < this.weights.length; i++) {
 			this.weights[i] += diff * grad[i];
 		}
@@ -310,5 +302,45 @@ public class NeuralNet
 		}
 		// Close writer
 		out.close();
+	}
+	
+	/**
+	 * Returns a mutated version of this neural network with a default mutation
+	 * rate causing the square root of the total number of weights to be mutated
+	 * on average.
+	 * <p>
+	 * This neural network is not changed.
+	 *
+	 * @return The mutated neural network.
+	 */
+	public NeuralNet mutate()
+	{
+		return this.mutate(1 / Math.sqrt(this.weights.length));
+	}
+	
+	/**
+	 * Returns a mutated version of this neural network with the passed-in
+	 * mutation rate.
+	 * <p>
+	 * This neural network is not changed.
+	 *
+	 * @param mutationRate The probability that any given weight will be
+	 * mutated.
+	 * @return The mutated neural network.
+	 */
+	public NeuralNet mutate(double mutationRate)
+	{
+		NeuralNet newNet = new NeuralNet(this.hiddenLength);
+		// Copy weights with chance of mutation
+		for (int i = 0; i < this.weights.length; i++) {
+			newNet.weights[i] = this.weights[i];
+			if (this.rng.nextDouble() < mutationRate) {
+				double mutAmt = this.rng.nextGaussian();
+				mutAmt /= Math.sqrt(i < this.hiddenLength * INPUT_LENGTH ?
+						INPUT_LENGTH : this.hiddenLength);
+				newNet.weights[i] += mutAmt;
+			}
+		}
+		return newNet;
 	}
 }
