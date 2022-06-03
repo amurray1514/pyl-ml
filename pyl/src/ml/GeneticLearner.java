@@ -68,8 +68,8 @@ public class GeneticLearner
 					this.players.get(i + 1), this.players.get(i + 2)
 			};
 			int[] winCounts = {0, 0, 0};
-			// Play 30 games
-			for (int j = 0; j < 30; j++) {
+			// Play 100 games
+			for (int j = 0; j < 100; j++) {
 				List<NeuralNetPlayer> gCompList = Arrays.asList(competitors);
 				Collections.shuffle(gCompList);
 				List<Player> winners = new Game(gCompList.toArray(

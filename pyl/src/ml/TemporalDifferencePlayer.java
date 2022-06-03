@@ -1,7 +1,5 @@
 package ml;
 
-import java.util.Arrays;
-
 /**
  * Class representing a neural-network-controlled player that trains its neural
  * network using temporal difference (TD) learning.
@@ -80,9 +78,5 @@ public class TemporalDifferencePlayer extends NeuralNetPlayer
 		}
 		// Set last state to new state
 		this.lastState = newState;
-		System.out.print("\rLearn complete. Round: " +
-				(this.getGame().isFinalRound() ? 2 : 1) + ", Spins Left: " +
-				Arrays.stream(this.getGame().getPlayers()).mapToInt(
-						p -> p.getEarnedSpins() + p.getPassedSpins()).sum());
 	}
 }
