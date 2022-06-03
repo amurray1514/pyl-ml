@@ -24,7 +24,7 @@ public class TemporalDifferenceLearner
 	};
 	
 	private final TemporalDifferencePlayer[] players;
-	private int numGames;
+	private long numGames;
 	
 	/**
 	 * Creates a new temporal difference learner.
@@ -98,11 +98,9 @@ public class TemporalDifferenceLearner
 				List<Player> winners = new Game(gCompList.toArray(
 						new Player[0]), BOARDS).play(false);
 				// See if the neural net player is a winner
-				for (Player p: winners) {
-					if (this.players[i].compareTo(p) == 0) {
-						winCounts[i]++;
-						break;
-					}
+				if (winners.stream()
+						.anyMatch(p -> p instanceof NeuralNetPlayer)) {
+					winCounts[i]++;
 				}
 				if (printStatus) {
 					System.out.print("\rEvaluation: Game " + (i * 10000 + j) +

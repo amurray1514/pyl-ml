@@ -25,7 +25,7 @@ public class GeneticLearner
 	};
 	
 	private final List<NeuralNetPlayer> players;
-	private int numGens;
+	private long numGens;
 	
 	/**
 	 * Creates a new genetic learner with a population size of 150.
@@ -134,11 +134,9 @@ public class GeneticLearner
 				List<Player> winners = new Game(gCompList.toArray(
 						new Player[0]), BOARDS).play(false);
 				// See if the neural net player is a winner
-				for (Player p: winners) {
-					if (this.players.get(i).compareTo(p) == 0) {
-						winCounts[i]++;
-						break;
-					}
+				if (winners.stream()
+						.anyMatch(p -> p instanceof NeuralNetPlayer)) {
+					winCounts[i]++;
 				}
 				if (printStatus) {
 					System.out.print("\rEvaluation: Game " + (i * 100 + j) +
