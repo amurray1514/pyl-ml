@@ -22,7 +22,7 @@ public final class Main
 			System.out.println("Error opening evals.csv: " + e);
 			System.exit(1);
 		}
-		GeneticLearner gl = new GeneticLearner(1500);
+		GeneticLearner gl = new GeneticLearner();
 		TemporalDifferenceLearner tdl = new TemporalDifferenceLearner();
 		double gl_eval = gl.evaluate(true);
 		System.out.println("0 min. GA evaluation: " + gl_eval);

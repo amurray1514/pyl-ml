@@ -63,7 +63,7 @@ public class TemporalDifferenceLearner
 		for (int i = 0; i < 3; i++) {
 			boolean isWinner = false;
 			for (Player p: winners) {
-				if (this.players[i].compareTo(p) == 0) {
+				if (this.players[i].equals(p)) {
 					isWinner = true;
 					break;
 				}
