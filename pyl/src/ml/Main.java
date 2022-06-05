@@ -72,7 +72,7 @@ public final class Main
 			tdl_eval = tdl.evaluate(true);
 			System.out.printf("TD win rate after %1$3d minutes: %2$7.3f%%\n", i,
 					100 * tdl_eval);
-			out.println(i + ',' + gl_eval + ',' + getMOE(gl_eval, 50000) +
+			out.println(i + "," + gl_eval + ',' + getMOE(gl_eval, 50000) +
 					',' + tdl_eval + ',' + getMOE(tdl_eval, 30000));
 		}
 		out.close();
