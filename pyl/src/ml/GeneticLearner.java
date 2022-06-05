@@ -209,7 +209,7 @@ public class GeneticLearner
 				.findFirst().ifPresent(j -> {
 					try {
 						this.players.get(j).getNeuralNet()
-								.export("gl_net_" + this.numGens);
+								.export("ga_net_" + this.numGens);
 					} catch (IOException e) {
 						System.out.println("Error writing to file: " + e);
 					}
