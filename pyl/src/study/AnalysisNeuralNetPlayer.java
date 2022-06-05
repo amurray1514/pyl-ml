@@ -39,7 +39,7 @@ public class AnalysisNeuralNetPlayer extends NeuralNetPlayer
 			this.txtOut = new PrintWriter(new BufferedWriter(new FileWriter(
 					fn + ".txt")));
 			this.txtOut.println("*".repeat(40) +
-					"\nAnalysis - Neural Net Player\n" + "*".repeat(40));
+					"\nGame Analysis\n" + "*".repeat(40));
 			this.csvOut = new PrintWriter(new BufferedWriter(new FileWriter(
 					fn + ".csv")));
 			for (int i = 0; i < NeuralNet.INPUT_LENGTH; i++) {
