@@ -14,6 +14,7 @@ public abstract class Player implements Comparable<Player>
 	private int playerNum, earnedSpins, passedSpins, whammies;
 	private long score;
 	private Game game;
+	private String name;
 	
 	/**
 	 * Constructs a new player.
@@ -21,6 +22,7 @@ public abstract class Player implements Comparable<Player>
 	protected Player()
 	{
 		this.playerNum = 1;
+		this.name = null;
 		this.score = 0;
 		this.earnedSpins = 0;
 		this.passedSpins = 0;
@@ -205,13 +207,27 @@ public abstract class Player implements Comparable<Player>
 	}
 	
 	/**
-	 * Returns this player's name, which is "Player <{@code playerNum}>".
+	 * Returns this player's name, which by default is "Player
+	 * <{@code playerNum}>".
 	 *
 	 * @return This player's name.
 	 */
 	public String getName()
 	{
-		return "Player " + this.playerNum;
+		if (this.name == null) {
+			return "Player " + this.playerNum;
+		}
+		return this.name;
+	}
+	
+	/**
+	 * Sets this player's name to the passed-in name.
+	 *
+	 * @param name The name to give this player.
+	 */
+	public void setName(String name)
+	{
+		this.name = name;
 	}
 	
 	/**
@@ -437,10 +453,10 @@ public abstract class Player implements Comparable<Player>
 	}
 	
 	/**
-	 * Returns a {@code String} representation of this player, which is
-	 * currently the player's name.
+	 * Returns a {@code String} representation of this player, which is simply
+	 * the player's name.
 	 *
-	 * @return a {@code String} representation of this player
+	 * @return A {@code String} representation of this player.
 	 */
 	public String toString()
 	{

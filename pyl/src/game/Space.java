@@ -180,7 +180,7 @@ public class Space
 	}
 	
 	/**
-	 * Returns a {@code String} representation of this space, which is currently
+	 * Returns a {@code String} representation of this space, which is simply
 	 * the space's current value's full name.
 	 *
 	 * @return A {@code String} representation of this space.

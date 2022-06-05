@@ -19,6 +19,9 @@ import java.util.stream.IntStream;
  */
 public class TemporalDifferenceLearner
 {
+	/**
+	 * The boards to use in the games.
+	 */
 	public static final Board[] BOARDS = {
 			new Board("board1.txt"), new Board("board2.txt")
 	};
@@ -47,7 +50,7 @@ public class TemporalDifferenceLearner
 	public void playGame(boolean printStatus)
 	{
 		if (printStatus) {
-			System.out.print("\rTotal games played: " + this.numGames);
+			System.out.printf("\rGames completed: %1$15d", this.numGames);
 		}
 		this.numGames++;
 		// Shuffle players
@@ -103,8 +106,8 @@ public class TemporalDifferenceLearner
 					winCounts[i]++;
 				}
 				if (printStatus) {
-					System.out.print("\rEvaluation: Game " + (i * 10000 + j) +
-							" of 30000 complete");
+					System.out.printf("\rEvaluation: %1$6.2f%% complete",
+							(i * 10000.0 + j) / 300);
 				}
 			}
 		}

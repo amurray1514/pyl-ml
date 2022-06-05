@@ -4,6 +4,7 @@ import game.Board;
 import game.Player;
 import game.Space;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,13 +18,14 @@ import java.util.List;
 public class NeuralNetPlayer extends Player
 {
 	private final NeuralNet net;
+	private final List<Double> lastAnalysis;
 	
 	/**
 	 * Creates a new player controlled by a random neural network.
 	 */
 	public NeuralNetPlayer()
 	{
-		this.net = new NeuralNet();
+		this(new NeuralNet());
 	}
 	
 	/**
@@ -34,6 +36,7 @@ public class NeuralNetPlayer extends Player
 	public NeuralNetPlayer(NeuralNet nn)
 	{
 		this.net = nn;
+		this.lastAnalysis = new ArrayList<>();
 	}
 	
 	/**
@@ -43,7 +46,19 @@ public class NeuralNetPlayer extends Player
 	 */
 	public NeuralNet getNeuralNet()
 	{
-		return net;
+		return this.net;
+	}
+	
+	/**
+	 * Returns this player's analysis of the previous decision in the form of a
+	 * list of doubles, where each double value is the evaluation of one of the
+	 * options.
+	 *
+	 * @return This player's analysis of the previous decision.
+	 */
+	public List<Double> getLastAnalysis()
+	{
+		return this.lastAnalysis;
 	}
 	
 	@Override
@@ -79,6 +94,13 @@ public class NeuralNetPlayer extends Player
 			input[12] = 0;
 			passEval = this.net.evaluate(input);
 		}
+		// Update last analysis
+		this.lastAnalysis.clear();
+		this.lastAnalysis.add(pressEval);
+		if (passEval >= 0) {
+			this.lastAnalysis.add(passEval);
+		}
+		// Return based on evaluations
 		return pressEval > passEval;
 	}
 	
@@ -156,6 +178,12 @@ public class NeuralNetPlayer extends Player
 			}
 			spaceEvals[i] = this.net.evaluate(newIn);
 		}
+		// Update last analysis
+		this.lastAnalysis.clear();
+		for (double eval: spaceEvals) {
+			this.lastAnalysis.add(eval);
+		}
+		// Find maximum space evaluation
 		int maxIdx = 0;
 		double maxEval = spaceEvals[0];
 		for (int i = 1; i < moveTargets.size(); i++) {
@@ -182,6 +210,13 @@ public class NeuralNetPlayer extends Player
 			loseEval = this.net.evaluate(input);
 			input[5 + this.getWhammies()] = 1;
 		}
+		// Update last analysis
+		this.lastAnalysis.clear();
+		this.lastAnalysis.add(moneyEval);
+		if (loseEval >= 0) {
+			this.lastAnalysis.add(loseEval);
+		}
+		// Return based on evaluations
 		return moneyEval > loseEval;
 	}
 	
@@ -198,6 +233,12 @@ public class NeuralNetPlayer extends Player
 			input[21 + 10 * i] -= this.getEarnedSpins();
 			input[12] = this.getEarnedSpins();
 		}
+		// Update last analysis
+		this.lastAnalysis.clear();
+		for (double eval: targetEvals) {
+			this.lastAnalysis.add(eval);
+		}
+		// Find maximum target evaluation
 		int maxIdx = 0;
 		double maxEval = targetEvals[0];
 		for (int i = 1; i < targets.size(); i++) {

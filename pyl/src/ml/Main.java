@@ -25,9 +25,11 @@ public final class Main
 		GeneticLearner gl = new GeneticLearner();
 		TemporalDifferenceLearner tdl = new TemporalDifferenceLearner();
 		double gl_eval = gl.evaluate(true);
-		System.out.println("0 min. GA evaluation: " + gl_eval);
+		System.out.printf("GA win rate after %1$3d minutes: %2$7.3f%%\n", 0,
+				100 * gl_eval);
 		double tdl_eval = tdl.evaluate(true);
-		System.out.println("0 min. TD evaluation: " + tdl_eval);
+		System.out.printf("TD win rate after %1$3d minutes: %2$7.3f%%\n", 0,
+				100 * tdl_eval);
 		out.println("0," + gl_eval + ',' + tdl_eval);
 		// Run each learner for 8 hours
 		for (int i = 1; i <= 480; i++) {
@@ -38,7 +40,8 @@ public final class Main
 				t2 = System.currentTimeMillis();
 			}
 			gl_eval = gl.evaluate(true);
-			System.out.println(i + " min. GA evaluation: " + gl_eval);
+			System.out.printf("GA win rate after %1$3d minutes: %2$7.3f%%\n", i,
+					100 * gl_eval);
 			t1 = System.currentTimeMillis();
 			t2 = t1;
 			while (t2 - t1 < 60000) {
@@ -46,7 +49,8 @@ public final class Main
 				t2 = System.currentTimeMillis();
 			}
 			tdl_eval = tdl.evaluate(true);
-			System.out.println(i + " min. TD evaluation: " + tdl_eval);
+			System.out.printf("TD win rate after %1$3d minutes: %2$7.3f%%\n", i,
+					100 * tdl_eval);
 			out.println(i + ',' + gl_eval + ',' + tdl_eval);
 		}
 		out.close();

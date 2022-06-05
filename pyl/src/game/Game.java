@@ -121,10 +121,9 @@ public class Game
 						System.out.print("to build their score or pass to end");
 						System.out.println(" the round.");
 					}
-				} else {
-					for (Player p: this.players) {
-						p.learn();
-					}
+				}
+				for (Player p: this.players) {
+					p.learn();
 				}
 				// Play all passed spins
 				if (printResults && this.currentTurn.getPassedSpins() > 0) {
@@ -138,10 +137,8 @@ public class Game
 						System.out.println(this);
 					}
 					this.currentTurn.playSpin(board, printResults, true);
-					if (!printResults) {
-						for (Player p: this.players) {
-							p.learn();
-						}
+					for (Player p: this.players) {
+						p.learn();
 					}
 				}
 				// Play or pass earned spins
@@ -156,10 +153,8 @@ public class Game
 									" presses their luck!");
 						}
 						this.currentTurn.playSpin(board, printResults, true);
-						if (!printResults) {
-							for (Player p: this.players) {
-								p.learn();
-							}
+						for (Player p: this.players) {
+							p.learn();
 						}
 					} else {
 						// Player passes
@@ -215,10 +210,8 @@ public class Game
 										" to " + target.getName() + '!');
 							}
 						}
-						if (!printResults) {
-							for (Player p: this.players) {
-								p.learn();
-							}
+						for (Player p: this.players) {
+							p.learn();
 						}
 					}
 				}
@@ -303,6 +296,27 @@ public class Game
 	{
 		return this.isFinalRound() && Arrays.stream(this.players).mapToInt(
 				p -> p.getEarnedSpins() + p.getPassedSpins()).sum() == 1;
+	}
+	
+	/**
+	 * Returns the player who is currently taking their turn.
+	 *
+	 * @return The player who is currently taking their turn.
+	 */
+	public Player getCurrentTurn()
+	{
+		return this.currentTurn;
+	}
+	
+	/**
+	 * Returns the player who is due to take their turn next, or {@code null} if
+	 * there is no player next in the turn order.
+	 *
+	 * @return The player who is due to take their turn next.
+	 */
+	public Player getNextTurn()
+	{
+		return this.nextTurn;
 	}
 	
 	/**

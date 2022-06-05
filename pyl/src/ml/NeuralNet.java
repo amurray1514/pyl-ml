@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
  * then outputs an estimated probability of winning in a single output node. The
  * neural network has one hidden layer.
  * <p>
- * The 34 input nodes are as follows:
+ * The input nodes are as follows:
  * <p>
  * 1 node that always contains 1.
  * <p>
@@ -49,8 +49,8 @@ public class NeuralNet
 	public static final int INPUT_LENGTH = 33;
 	
 	private final Random rng;
-	private final int hiddenLength;
-	private final double[] weights;
+	private int hiddenLength;
+	private double[] weights;
 	
 	/**
 	 * Creates a new neural network with a hidden layer of size 40.
@@ -86,39 +86,43 @@ public class NeuralNet
 	 * Creates a neural network with weights imported from the given file.
 	 *
 	 * @param fn The filename to import weights from.
-	 * @throws IOException If an I/O error occurs.
 	 */
-	public NeuralNet(String fn) throws IOException
+	public NeuralNet(String fn)
 	{
 		// Initialize RNG
 		this.rng = new Random();
-		// Set up file reading
-		BufferedReader in = new BufferedReader(new FileReader(fn));
-		String line = in.readLine();
-		int lineNum = 1;
-		assert line != null : "Unexpected EOF while reading " + fn;
-		// Read hidden layer size first
-		int hiddenLayerSize = -1;
 		try {
-			hiddenLayerSize = Integer.parseInt(line);
-		} catch (NumberFormatException e) {
-			System.out.println("Line 1 of file " + fn + " must be an integer");
-			System.exit(1);
-		}
-		this.hiddenLength = hiddenLayerSize;
-		// Then read the weights
-		this.weights = new double[this.hiddenLength * (INPUT_LENGTH + 1)];
-		while (lineNum <= this.weights.length + 1) {
-			line = in.readLine();
-			lineNum++;
+			// Set up file reading
+			BufferedReader in = new BufferedReader(new FileReader(fn));
+			String line = in.readLine();
+			int lineNum = 1;
 			assert line != null : "Unexpected EOF while reading " + fn;
+			// Read hidden layer size first
+			int hiddenLayerSize = -1;
 			try {
-				this.weights[lineNum - 2] = Double.parseDouble(line);
+				hiddenLayerSize = Integer.parseInt(line);
 			} catch (NumberFormatException e) {
-				this.weights[lineNum - 2] = 0.0;
-				System.out.println("Warning - malformed weight at line " +
-						lineNum + " of file " + fn + "; weight set to 0");
+				System.out.println("Line 1 of file " + fn + " must be an integer");
+				System.exit(1);
 			}
+			this.hiddenLength = hiddenLayerSize;
+			// Then read the weights
+			this.weights = new double[this.hiddenLength * (INPUT_LENGTH + 1)];
+			while (lineNum <= this.weights.length) {
+				line = in.readLine();
+				lineNum++;
+				assert line != null : "Unexpected EOF while reading " + fn;
+				try {
+					this.weights[lineNum - 2] = Double.parseDouble(line);
+				} catch (NumberFormatException e) {
+					this.weights[lineNum - 2] = 0.0;
+					System.out.println("Warning - malformed weight at line " +
+							lineNum + " of file " + fn + "; weight set to 0");
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Error while reading file: " + e);
+			System.exit(1);
 		}
 	}
 	

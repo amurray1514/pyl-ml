@@ -123,7 +123,7 @@ public class GeneticLearner
 	public void playGeneration(boolean printStatus)
 	{
 		if (printStatus) {
-			System.out.print("\rGenerations completed: " + this.numGens);
+			System.out.printf("\rGenerations completed: %1$10d", this.numGens);
 		}
 		this.numGens++;
 		// Shuffle players
@@ -197,9 +197,8 @@ public class GeneticLearner
 					winCounts[i]++;
 				}
 				if (printStatus) {
-					System.out.print("\rEvaluation: Game " + (i * 100 + j) +
-							" of " + (100 * this.players.size() / 3) +
-							" complete");
+					System.out.printf("\rEvaluation: %1$6.2f%% complete",
+							(i * 100.0 + j) / (this.players.size() / 3));
 				}
 			}
 		}
