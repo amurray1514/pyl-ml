@@ -15,11 +15,11 @@ import java.util.stream.IntStream;
 
 /**
  * Class that uses a genetic algorithm to train a neural network to play Press
- * Your Luck.
+ * Your Luck against the heuristic strategy.
  *
  * @author Archer Murray
  */
-public class GeneticLearner
+public class GeneticHeuristicLearner
 {
 	/**
 	 * The boards to use in the games.
@@ -39,7 +39,7 @@ public class GeneticLearner
 	 * This class implements a thread to perform multithreaded genetic
 	 * learning.
 	 */
-	private class GeneticLearnerThread extends Thread
+	private class GeneticHeuristicLearnerThread extends Thread
 	{
 		private final List<NeuralNetPlayer> players;
 		
@@ -48,7 +48,7 @@ public class GeneticLearner
 		 *
 		 * @param players The players to use.
 		 */
-		public GeneticLearnerThread(List<NeuralNetPlayer> players)
+		public GeneticHeuristicLearnerThread(List<NeuralNetPlayer> players)
 		{
 			this.players = players;
 		}
@@ -56,59 +56,60 @@ public class GeneticLearner
 		@Override
 		public void run()
 		{
-			// Have players play each other in groups of three
-			for (int i = 0; i < this.players.size(); i += 3) {
-				NeuralNetPlayer[] competitors = {
-						this.players.get(i), this.players.get(i + 1),
-						this.players.get(i + 2)
+			int[] winCounts = new int[this.players.size()];
+			// Have each player play 100 games against two heuristic players
+			for (int i = 0; i < this.players.size(); i++) {
+				Player[] competitors = {
+						this.players.get(i), new HeuristicPlayer(),
+						new HeuristicPlayer()
 				};
-				int[] winCounts = {0, 0, 0};
-				// Play 100 games
 				for (int j = 0; j < 100; j++) {
-					List<NeuralNetPlayer> compList = Arrays.asList(competitors);
+					List<Player> compList = Arrays.asList(competitors);
 					Collections.shuffle(compList);
 					List<Player> winners;
 					synchronized (BOARDS) {
-						winners = new Game(compList.toArray(new
-								NeuralNetPlayer[0]), BOARDS).play(false);
+						winners = new Game(compList.toArray(new Player[0]),
+								BOARDS).play(false);
 					}
-					// For each player, see if they are a winner
-					for (int k = 0; k < 3; k++) {
-						for (Player p: winners) {
-							if (competitors[k].equals(p)) {
-								winCounts[k]++;
-								break;
-							}
-						}
+					// See if the neural net player is a winner
+					if (winners.stream().anyMatch(p ->
+							p instanceof NeuralNetPlayer)) {
+						winCounts[i]++;
 					}
 				}
-				// The player with the most wins survives
-				int maxWins = Arrays.stream(winCounts).max().orElse(-1);
-				synchronized (survivors) {
-					IntStream.range(0, 3).filter(j -> winCounts[j] == maxWins)
-							.findFirst().ifPresent(
-									j -> survivors.add(competitors[j]));
+			}
+			// The top half of players survive
+			for (int i = 0; i < this.players.size(); i++) {
+				this.players.get(i).setScore(winCounts[i]);
+				this.players.get(i).setPlayerNum(i);
+			}
+			Collections.sort(this.players);
+			synchronized (survivors) {
+				for (int i = this.players.size() - 1; i >= this.players.size() /
+						2; i--) {
+					survivors.add(this.players.get(i));
 				}
 			}
 		}
 	}
 	
 	/**
-	 * Creates a new genetic learner with a population size of 1500.
+	 * Creates a new genetic heuristic learner with a population size of 1000.
 	 */
-	public GeneticLearner()
+	public GeneticHeuristicLearner()
 	{
-		this(1500);
+		this(1000);
 	}
 	
 	/**
-	 * Creates a new genetic learner with the specified population size.
+	 * Creates a new genetic heuristic learner with the specified population
+	 * size.
 	 *
-	 * @param numPlayers The population size, which must be divisible by 3.
+	 * @param numPlayers The population size, which must be divisible by 2.
 	 */
-	public GeneticLearner(int numPlayers)
+	public GeneticHeuristicLearner(int numPlayers)
 	{
-		assert numPlayers % 3 == 0 : "Number of players must be divisible by 3";
+		assert numPlayers % 2 == 0 : "Number of players must be divisible by 2";
 		this.players = new ArrayList<>();
 		this.survivors = new ArrayList<>();
 		for (int i = 0; i < numPlayers; i++) {
@@ -131,22 +132,23 @@ public class GeneticLearner
 		this.numGens++;
 		// Shuffle players
 		Collections.shuffle(this.players);
-		// Assign each set of three players to a group
+		// Assign each pair of players to a group
 		List<List<NeuralNetPlayer>> groups = IntStream.range(0, NUM_THREADS)
 				.<List<NeuralNetPlayer>>mapToObj(i -> new ArrayList<>())
 				.collect(Collectors.toList());
 		int gn = -1;
 		for (int i = 0; i < this.players.size(); i++) {
-			if (i % 3 == 0) {
+			if (i % 2 == 0) {
 				gn++;
 			}
 			groups.get(gn % NUM_THREADS).add(this.players.get(i));
 		}
 		// Run a thread for each group
-		List<GeneticLearnerThread> threads = IntStream.range(0, NUM_THREADS)
-				.mapToObj(i -> new GeneticLearnerThread(groups.get(i)))
+		List<GeneticHeuristicLearnerThread> threads =
+				IntStream.range(0, NUM_THREADS).mapToObj(i -> new
+								GeneticHeuristicLearnerThread(groups.get(i)))
 				.collect(Collectors.toList());
-		for (GeneticLearnerThread t: threads) {
+		for (GeneticHeuristicLearnerThread t: threads) {
 			t.start();
 		}
 		for (int i = 0; i < NUM_THREADS;) {
@@ -161,10 +163,7 @@ public class GeneticLearner
 		this.players.clear();
 		this.players.addAll(this.survivors);
 		for (NeuralNetPlayer p: this.survivors) {
-			for (int i = 0; i < 2; i++) {
-				this.players.add(new NeuralNetPlayer(
-						p.getNeuralNet().mutate()));
-			}
+			this.players.add(new NeuralNetPlayer(p.getNeuralNet().mutate()));
 		}
 		this.survivors.clear();
 	}
@@ -174,7 +173,7 @@ public class GeneticLearner
 	 * against two heuristic players.
 	 * <p>
 	 * Also, writes the top-performing neural network in the population to the
-	 * file "ga_net_[generation_number].txt".
+	 * file "gah_net_[generation_number].txt".
 	 *
 	 * @param printStatus If {@code true}, prints the progress of the evaluation
 	 * to the console while this method runs.
@@ -182,8 +181,8 @@ public class GeneticLearner
 	 */
 	public double evaluate(boolean printStatus)
 	{
-		int[] winCounts = new int[this.players.size() / 3];
-		for (int i = 0; i < this.players.size() / 3; i++) {
+		int[] winCounts = new int[this.players.size() / 2];
+		for (int i = 0; i < this.players.size() / 2; i++) {
 			Player[] competitors = {
 					this.players.get(i), new HeuristicPlayer(),
 					new HeuristicPlayer()
@@ -201,18 +200,18 @@ public class GeneticLearner
 				}
 				if (printStatus) {
 					System.out.printf("\rEvaluation: %1$6.2f%% complete",
-							(i * 100.0 + j) / (this.players.size() / 3));
+							(i * 100.0 + j) / (this.players.size() / 2));
 				}
 			}
 		}
 		// Export the player with the most wins
 		int maxWins = Arrays.stream(winCounts).max().orElse(-1);
-		IntStream.range(0, this.players.size() / 3)
+		IntStream.range(0, this.players.size() / 2)
 				.filter(j -> winCounts[j] == maxWins)
 				.findFirst().ifPresent(j -> {
 					try {
 						this.players.get(j).getNeuralNet()
-								.export("ga_net_" + this.numGens);
+								.export("gah_net_" + this.numGens);
 					} catch (IOException e) {
 						System.out.println("Error writing to file: " + e);
 					}
@@ -220,7 +219,7 @@ public class GeneticLearner
 		if (printStatus) {
 			System.out.print("\r");
 		}
-		return 3.0 * Arrays.stream(winCounts).sum() / (100 *
+		return 2.0 * Arrays.stream(winCounts).sum() / (100 *
 				this.players.size());
 	}
 }
