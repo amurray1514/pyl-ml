@@ -208,7 +208,7 @@ public abstract class Player implements Comparable<Player>
 	
 	/**
 	 * Returns this player's name, which by default is "Player
-	 * <{@code playerNum}>".
+	 * [{@code playerNum}]".
 	 *
 	 * @return This player's name.
 	 */

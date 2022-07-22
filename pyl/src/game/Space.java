@@ -26,9 +26,9 @@ import java.util.Random;
  * <p>
  * M followed by a number N indicates Move N Space(s).
  * <p>
- * < followed by a number N indicates Go Back N Space(s).
+ * A less-than sign followed by a number N indicates Go Back N Space(s).
  * <p>
- * > followed by a number N indicates Advance N Space(s).
+ * A greater-than sign followed by a number N indicates Advance N Space(s).
  * <p>
  * C indicates Pick-a-Corner.
  *
